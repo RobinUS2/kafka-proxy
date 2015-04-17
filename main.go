@@ -59,7 +59,6 @@ func main() {
 		// Connect
 		sinkMap[topic] = NewKafkaSink(topic, brokers)
 		sinkMap[topic].Connect()
-		sinkMap[topic].Write("Hello")
 	}
 
 	// Listen HTTP
@@ -88,6 +87,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	bodyStr := string(bodyBytes)
 	if len(bodyStr) < 1 {
 		log.Println("Empty body")
+		return
+	}
+
+	// Topic
+	reqTopic := strings.TrimSpace(r.URL.Query().Get("topic"))
+	if len(reqTopic) < 1 || sinkMap[reqTopic] == nil {
+		log.Println("Topic not found")
 		return
 	}
 }
