@@ -19,8 +19,8 @@ var sinkMap map[string]*KafkaSink
 
 func init() {
 	flag.IntVar(&HTTP_PORT, "p", 9001, "HTTP port")
-	flag.StringVar(&SECURE_TOKEN, "token", "", "Secure token")
-	flag.StringVar(&HOSTNAME, "hostname", "", "Secure token")
+	flag.StringVar(&SECURE_TOKEN, "token", "", "Authentication token")
+	flag.StringVar(&HOSTNAME, "hostname", "", "Hostname override (default: automatic detection)")
 	flag.StringVar(&SINKS, "sinks", "", "Configure sinks (mytopic=broker:port,broker:port;anothert_topic=broker:port)")
 	flag.Parse()
 }
