@@ -47,7 +47,7 @@ func (k *KafkaSink) _write(msg string) bool {
 	k.initMux.RLock()
 	if k.connected == false {
 		k.initMux.RUnlock()
-		log.Println("Kafka not connected")
+		log.Printf("Kafka not connected to '%s' ", k.topic)
 		return false
 	}
 	k.initMux.RUnlock()
@@ -56,7 +56,7 @@ func (k *KafkaSink) _write(msg string) bool {
 		//log.Println("> message queued")
 		return true
 	case err := <-k.producer.Errors():
-		log.Println(fmt.Sprintf("Failed to write into kafka: %s", err.Err))
+		log.Println(fmt.Sprintf("Failed to write into kafka '%s': %s", k.topic, err.Err))
 		return false
 	}
 }
@@ -72,7 +72,7 @@ func (k *KafkaSink) Connect() (bool, error) {
 	}
 
 	// Connect
-	log.Println("Kafka sink connecting")
+	log.Printf("Kafka sink connecting to '%s'", k.topic)
 	conf := gokafka.NewConfig()
 	brokers := strings.Split(k.brokers, ",")
 	conf.ClientID = fmt.Sprintf("kafka_sink_%s", HOSTNAME)
@@ -83,7 +83,7 @@ func (k *KafkaSink) Connect() (bool, error) {
 	}
 	k.connected = true
 	k.client = &client
-	log.Println("Kafka sink connected")
+	log.Printf("Kafka sink conntected to '%s'", k.topic)
 
 	// Producer
 	prodConf := gokafka.NewConfig()
@@ -93,7 +93,7 @@ func (k *KafkaSink) Connect() (bool, error) {
 		return false, producerErr
 	}
 	k.producer = producer
-	log.Println("Kafka producer initiated")
+	log.Printf("Kafka producer initiated for '%s'", k.topic)
 
 	return true, nil
 }
