@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -63,6 +64,7 @@ func main() {
 
 	// Listen HTTP
 	http.HandleFunc("/enqueue", handler)
+	http.HandleFunc("/stats", statsHandler)
 	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
 }
 
@@ -75,7 +77,30 @@ func getHostname() string {
 	return name
 }
 
+func statsHandler(w http.ResponseWriter, r *http.Request) {
+	// Token
+	if r.URL.Query().Get("token") != SECURE_TOKEN {
+		w.WriteHeader(401) // Not authorized
+		return
+	}
+
+	// Stats
+	stats := make(map[string]map[string]interface{})
+	for topic, sink := range sinkMap {
+		stats[topic] = make(map[string]interface{})
+		stats[topic]["messages"] = sink.messageCount
+	}
+	bytes, _ := json.Marshal(stats)
+	fmt.Fprintf(w, "%s", bytes)
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
+	// Token
+	if r.URL.Query().Get("token") != SECURE_TOKEN {
+		w.WriteHeader(401) // Not authorized
+		return
+	}
+
 	// Read body
 	bodyBytes, bodyErr := ioutil.ReadAll(r.Body)
 	if bodyErr != nil {

@@ -13,13 +13,14 @@ import (
 )
 
 type KafkaSink struct {
-	initMux   sync.RWMutex
-	connected bool
-	client    *gokafka.Client
-	producer  gokafka.AsyncProducer
-	buffer    chan string
-	topic     string
-	brokers   string
+	initMux      sync.RWMutex
+	connected    bool
+	client       *gokafka.Client
+	producer     gokafka.AsyncProducer
+	buffer       chan string
+	topic        string
+	brokers      string
+	messageCount uint64
 }
 
 func (k *KafkaSink) Write(msg string) bool {
@@ -54,6 +55,7 @@ func (k *KafkaSink) _write(msg string) bool {
 	select {
 	case k.producer.Input() <- &gokafka.ProducerMessage{Topic: k.topic, Key: nil, Value: gokafka.StringEncoder(msg)}:
 		//log.Println("> message queued")
+		k.messageCount++
 		return true
 	case err := <-k.producer.Errors():
 		log.Println(fmt.Sprintf("Failed to write into kafka '%s': %s", k.topic, err.Err))
