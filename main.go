@@ -79,6 +79,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Read body
 	bodyBytes, bodyErr := ioutil.ReadAll(r.Body)
 	if bodyErr != nil {
+		w.WriteHeader(400) // Bad request
 		log.Println("%s", bodyErr)
 		return
 	}
@@ -86,6 +87,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Validate body
 	bodyStr := string(bodyBytes)
 	if len(bodyStr) < 1 {
+		w.WriteHeader(400) // Bad request
 		log.Println("Empty body")
 		return
 	}
@@ -93,7 +95,11 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	// Topic
 	reqTopic := strings.TrimSpace(r.URL.Query().Get("topic"))
 	if len(reqTopic) < 1 || sinkMap[reqTopic] == nil {
+		w.WriteHeader(400) // Bad request
 		log.Println("Topic not found")
 		return
 	}
+
+	// Insert
+	sinkMap[reqTopic].Write(bodyStr)
 }
