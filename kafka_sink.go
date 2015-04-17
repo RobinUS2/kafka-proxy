@@ -19,6 +19,7 @@ type KafkaSink struct {
 	producer  gokafka.AsyncProducer
 	buffer    chan string
 	topic     string
+	brokers   string
 }
 
 func (k *KafkaSink) Write(msg string) bool {
@@ -73,7 +74,7 @@ func (k *KafkaSink) Connect() (bool, error) {
 	// Connect
 	log.Println("Kafka sink connecting")
 	conf := gokafka.NewConfig()
-	brokers := strings.Split("k001.fzks.flxops.com:9092,k002.fzks.flxops.com:9092,k003.fzks.flxops.com:9092", ",")
+	brokers := strings.Split(k.brokers, ",")
 	conf.ClientID = fmt.Sprintf("kafka_sink_%s", HOSTNAME)
 	client, clientErr := gokafka.NewClient(brokers, conf)
 	if clientErr != nil {
@@ -97,9 +98,10 @@ func (k *KafkaSink) Connect() (bool, error) {
 	return true, nil
 }
 
-func NewKafkaSink(topic string) *KafkaSink {
+func NewKafkaSink(topic string, brokers string) *KafkaSink {
 	elm := &KafkaSink{
 		topic:     topic,
+		brokers:   brokers,
 		connected: false,
 		buffer:    make(chan string, 1000),
 	}

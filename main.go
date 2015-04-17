@@ -13,11 +13,15 @@ import (
 var HTTP_PORT int
 var SECURE_TOKEN string
 var HOSTNAME string
+var SINKS string
+var sinkMap map[string]*KafkaSink
 
 func init() {
 	flag.IntVar(&HTTP_PORT, "p", 9001, "HTTP port")
 	flag.StringVar(&SECURE_TOKEN, "token", "", "Secure token")
 	flag.StringVar(&HOSTNAME, "hostname", "", "Secure token")
+	flag.StringVar(&SINKS, "sinks", "", "Configure sinks (mytopic=broker:port,broker:port;anothert_topic=broker:port)")
+	flag.Parse()
 }
 
 func main() {
@@ -30,6 +34,32 @@ func main() {
 	if len(strings.TrimSpace(SECURE_TOKEN)) < 1 {
 		HOSTNAME = getHostname()
 		log.Printf("Detected hostname '%s'", HOSTNAME)
+	}
+
+	// Connect sinks
+	sinkMap = make(map[string]*KafkaSink)
+	topics := strings.Split(SINKS, ";")
+	for _, topicDef := range topics {
+		split := strings.Split(topicDef, "=")
+		if len(split) != 2 {
+			log.Println("WARNING! Sink definition format invalid")
+			continue
+		}
+		var topic string = split[0]
+		var brokers string = split[1]
+		if len(strings.TrimSpace(topic)) < 1 {
+			log.Println("WARNING! Empty topic in configuration")
+			continue
+		}
+		if len(strings.TrimSpace(brokers)) < 1 {
+			log.Println("WARNING! Empty broker list in configuration")
+			continue
+		}
+
+		// Connect
+		sinkMap[topic] = NewKafkaSink(topic, brokers)
+		sinkMap[topic].Connect()
+		sinkMap[topic].Write("Hello")
 	}
 
 	// Listen HTTP
