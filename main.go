@@ -12,6 +12,7 @@ import (
 )
 
 var HTTP_PORT int
+var HTTP_HOST string
 var SECURE_TOKEN string
 var HOSTNAME string
 var SINKS string
@@ -19,6 +20,7 @@ var sinkMap map[string]*KafkaSink
 
 func init() {
 	flag.IntVar(&HTTP_PORT, "p", 9001, "HTTP port")
+	flag.StringVar(&HTTP_HOST, "h", "localhost", "HTTP host (default: localhost)")
 	flag.StringVar(&SECURE_TOKEN, "token", "", "Authentication token")
 	flag.StringVar(&HOSTNAME, "hostname", "", "Hostname override (default: automatic detection)")
 	flag.StringVar(&SINKS, "sinks", "", "Configure sinks (mytopic=broker:port,broker:port;anothert_topic=broker:port)")
@@ -65,7 +67,7 @@ func main() {
 	// Listen HTTP
 	http.HandleFunc("/enqueue", handler)
 	http.HandleFunc("/stats", statsHandler)
-	http.ListenAndServe(fmt.Sprintf(":%d", HTTP_PORT), nil)
+	http.ListenAndServe(fmt.Sprintf("%s:%d", HTTP_HOST, HTTP_PORT), nil)
 }
 
 func getHostname() string {
